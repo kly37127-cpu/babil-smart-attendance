@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f766e">
+<title>Babil Smart Attendance</title>
+<style>
+:root{--teal:#0f766e;--deep:#134e4a;--bg:#f3f7f7;--ink:#172b2a;--muted:#647775;--line:#dce8e6;--white:#fff;--red:#b42318;--amber:#a15c07}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif}
+header{background:linear-gradient(120deg,#115e59,#0f766e);color:white;padding:24px 18px 30px}
+.wrap{max-width:1050px;margin:auto;padding:0 16px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-size:21px;font-weight:800}.sub{opacity:.85;font-size:13px;margin-top:6px}
+.pill{border:1px solid #ffffff55;border-radius:30px;padding:8px 12px;font-size:12px}
+main{margin-top:-14px;padding-bottom:40px}.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+button{border:0;border-radius:11px;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer}
+.tab{background:white;color:var(--deep);border:1px solid var(--line)}.tab.active,.primary{background:var(--teal);color:white}
+.card{background:white;border:1px solid var(--line);border-radius:17px;padding:18px;margin-bottom:14px;box-shadow:0 5px 18px #153c3810}
+h2{font-size:18px;margin:0 0 14px}h3{font-size:15px;margin:0 0 8px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:white;color:var(--ink)}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.secondary{background:#e7f2f0;color:var(--deep)}.danger{background:#fff0ee;color:var(--red)}
+.notice{background:#eff8f6;border:1px solid #cbe7e2;padding:12px;border-radius:12px;color:#245a54;font-size:13px;line-height:1.8}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f6faf9;border:1px solid var(--line);padding:14px;border-radius:13px}.stat b{display:block;font-size:24px;color:var(--teal);margin-top:5px}
+.small{font-size:12px;color:var(--muted);line-height:1.8}.status{font-weight:700}.ok{color:var(--teal)}.bad{color:var(--red)}.warn{color:var(--amber)}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:650px}th,td{padding:11px 9px;border-bottom:1px solid var(--line);text-align:right}th{color:var(--muted);background:#f8fbfa}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+.hidden{display:none!important}.center{text-align:center}.bigtime{font-size:34px;font-weight:800;color:var(--teal);margin:12px 0}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.brand{font-size:18px}.card{padding:15px}}
+</style>
+</head>
+<body>
+<header><div class="wrap top"><div><div class="brand">Babil Smart Attendance</div><div class="sub">نظام إدارة حضور وانصراف الموظفين</div></div><div class="pill">بابل – الحلة | نسخة تجريبية</div></div></header>
+<main class="wrap">
+<div class="tabs">
+<button class="tab active" id="employeeTab" onclick="show('employee')">تسجيل الموظف</button>
+<button class="tab" id="adminTab" onclick="show('admin')">لوحة الإدارة</button>
+</div>
+<section id="employee">
+<div class="card">
+<h2>تسجيل الحضور والانصراف</h2>
+<div class="grid">
+<div class="field"><label>الرقم الوظيفي</label><input id="empId" placeholder="مثال: 1001"></div>
+<div class="field"><label>اسم الموظف</label><input id="empName" placeholder="الاسم الكامل"></div>
+</div>
+<div class="notice" style="margin-top:14px">يبدأ الدوام الساعة <b>04:30 مساءً</b>. يجب أن يكون الموظف داخل نطاق الشركة المحدد بـ <b>100 متر</b> من الموقع المعتمد.</div>
+<div class="center"><div class="bigtime" id="clock">--:--:--</div><div class="small" id="today"></div></div>
+<div class="actions">
+<button class="primary" onclick="record('حضور')">تسجيل الحضور</button>
+<button class="secondary" onclick="record('انصراف')">تسجيل الانصراف</button>
+</div>
+<p id="employeeMsg" class="small" aria-live="polite"></p>
+</div>
+<div class="card">
+<h2>حالة الموقع</h2>
+<p class="small">اضغط للتحقق من موقع الجهاز قبل تسجيل الحركة.</p>
+<button class="secondary" onclick="checkLocation()">التحقق من موقعي GPS</button>
+<p id="gpsMsg" class="small" aria-live="polite">لم يتم التحقق من الموقع بعد.</p>
+</div>
+</section>
+<section id="admin" class="hidden">
+<div class="card" id="loginCard">
+<h2>دخول الإدارة</h2>
+<div class="field"><label>رمز الإدارة التجريبي</label><input id="adminPin" type="password" placeholder="أدخل الرمز"></div>
+<div class="actions"><button class="primary" onclick="adminLogin()">دخول</button></div>
+<p class="small">الرمز التجريبي: <b>2468</b> — يجب تغييره عند ربط النظام بخادم حقيقي.</p>
+</div>
+<div id="adminPanel" class="hidden">
+<div class="card">
+<div class="top"><h2>ملخص الحضور</h2><button class="secondary" onclick="logout()">خروج</button></div>
+<div class="stats">
+<div class="stat">إجمالي الحركات<b id="total">0</b></div>
+<div class="stat">حضور اليوم<b id="present">0</b></div>
+<div class="stat">انصراف اليوم<b id="left">0</b></div>
+</div>
+<div class="actions">
+<button class="secondary" onclick="exportCSV()">تصدير Excel / CSV</button>
+<button class="danger" onclick="clearRecords()">مسح سجلات هذا الجهاز</button>
+</div>
+</div>
+<div class="card">
+<h2>سجل الحركات</h2>
+<div class="grid" style="margin-bottom:12px">
+<div class="field"><label>بحث بالاسم أو الرقم</label><input id="filter" oninput="render()" placeholder="ابحث..."></div>
+<div class="field"><label>تصفية نوع الحركة</label><select id="typeFilter" onchange="render()"><option value="">الكل</option><option>حضور</option><option>انصراف</option></select></div>
+</div>
+<div class="tablewrap"><table><thead><tr><th>الرقم</th><th>اسم الموظف</th><th>الحركة</th><th>التاريخ</th><th>الوقت</th><th>الموقع</th></tr></thead><tbody id="rows"></tbody></table></div>
+<p class="small">السجلات المعروضة محفوظة محلياً على هذا الجهاز فقط.</p>
+</div>
+</div>
+</section>
+<footer>بابل Smart Attendance · نموذج أولي مجاني</footer>
+</main>
+<script>
+const COMPANY={lat:32.46572,lng:44.40308,radius:100,start:"16:30"};
+let locationOK=false, distanceNow=null, admin=false;
+const $=id=>document.getElementById(id);
+function now(){return new Date()}
+function dateKey(d){return d.toLocaleDateString('en-CA')}
+function clock(){let d=now();$('clock').textContent=d.toLocaleTimeString('en-GB');$('today').textContent=d.toLocaleDateString('ar-IQ',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
+setInterval(clock,1000);clock();
+function getRecords(){try{return JSON.parse(localStorage.getItem('babilAttendance')||'[]')}catch(e){return []}}
+function saveRecords(a){localStorage.setItem('babilAttendance',JSON.stringify(a))}
+function show(which){$('employee').classList.toggle('hidden',which!=='employee');$('admin').classList.toggle('hidden',which!=='admin');$('employeeTab').classList.toggle('active',which==='employee');$('adminTab').classList.toggle('active',which==='admin')}
+function haversine(a,b,c,d){const R=6371000,rad=x=>x*Math.PI/180;let x=rad(c-a),y=rad(d-b);let h=Math.sin(x/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+function checkLocation(){
+ const msg=$('gpsMsg');locationOK=false;msg.textContent='جارٍ تحديد الموقع...';
+ if(!navigator.geolocation){msg.textContent='المتصفح لا يدعم تحديد الموقع.';return}
+ navigator.geolocation.getCurrentPosition(pos=>{
+ distanceNow=haversine(COMPANY.lat,COMPANY.lng,pos.coords.latitude,pos.coords.longitude);
+ locationOK=distanceNow<=COMPANY.radius;
+ msg.innerHTML=locationOK?`<span class="ok">أنت داخل النطاق المسموح.</span> المسافة التقريبية: ${Math.round(distanceNow)} متر.`:`<span class="bad">أنت خارج نطاق الشركة.</span> المسافة التقريبية: ${Math.round(distanceNow)} متر.`;
+ },err=>{msg.textContent='تعذر تحديد الموقع. فعّل GPS واسمح للموقع من إعدادات المتصفح.'},{enableHighAccuracy:true,timeout:12000,maximumAge:0});
+}
+function record(type){
+ let id=$('empId').value.trim(),name=$('empName').value.trim(),msg=$('employeeMsg');
+ if(!id||!name){msg.textContent='يرجى إدخال الرقم الوظيفي والاسم.';return}
+ if(!locationOK){msg.textContent='يجب التحقق من الموقع أولاً وأن تكون داخل نطاق الشركة.';return}
+ let d=now(),time=d.toLocaleTimeString('en-GB'),date=dateKey(d);
+ let records=getRecords();
+ records.push({id,name,type,date,time,stamp:d.toISOString(),distance:Math.round(distanceNow||0)});
+ saveRecords(records);msg.innerHTML=`<span class="ok">تم تسجيل ${type} بنجاح في ${time}.</span>`;
+}
+function adminLogin(){if($('adminPin').value==='2468'){admin=true;$('loginCard').classList.add('hidden');$('adminPanel').classList.remove('hidden');render()}else alert('رمز الإدارة غير صحيح')}
+function logout(){admin=false;$('loginCard').classList.remove('hidden');$('adminPanel').classList.add('hidden');$('adminPin').value=''}
+function render(){
+ if(!admin)return;let all=getRecords(),today=dateKey(now()),q=$('filter').value.toLowerCase(),tf=$('typeFilter').value;
+ $('total').textContent=all.length;$('present').textContent=all.filter(x=>x.date===today&&x.type==='حضور').length;$('left').textContent=all.filter(x=>x.date===today&&x.type==='انصراف').length;
+ let filtered=all.filter(x=>(!q||(x.name+' '+x.id).toLowerCase().includes(q))&&(!tf||x.type===tf)).slice().reverse();
+ $('rows').innerHTML=filtered.map(x=>`<tr><td>${esc(x.id)}</td><td>${esc(x.name)}</td><td>${x.type==='حضور'?'<span class="ok">حضور</span>':'انصراف'}</td><td>${esc(x.date)}</td><td>${esc(x.time)}</td><td>${x.distance} م</td></tr>`).join('')||'<tr><td colspan="6" class="center">لا توجد سجلات</td></tr>';
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function exportCSV(){
+ let all=getRecords(),rows=[['Employee ID','Employee Name','Type','Date','Time','Distance (m)'],...all.map(x=>[x.id,x.name,x.type,x.date,x.time,x.distance])];
+ let csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+ let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='babil-attendance.csv';a.click();URL.revokeObjectURL(a.href);
+}
+function clearRecords(){if(confirm('متأكد من مسح جميع السجلات المحفوظة على هذا الجهاز؟')){saveRecords([]);render()}}
+</script>
+</body></html>
